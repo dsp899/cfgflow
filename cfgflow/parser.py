@@ -1,0 +1,81 @@
+def parser(cfgfile):
+
+    def _parse(l, i = 1):
+        return l.split('=')[i].strip()
+
+    with open(cfgfile, 'rb') as cfg:
+        _file = cfg.readlines()
+
+    lines = [line.decode() for line in _file]
+    layers = list()
+    #layer = dict()
+    for line in lines:
+        line = line.strip()
+        if '[' in line:
+            layer = {'type': line}
+            layers.append(layer)
+
+        elif line == '':
+            pass
+
+        else:
+            try:
+                i = float(_parse(line))
+                if i == int(i):
+                    i = int(i)
+                    layer[line.split('=')[0].strip()] = i
+            except:
+                try:
+                    key = _parse(line, 0)
+                    val = _parse(line, 1)
+                    layer[key] = val
+                except:
+                    pass#print('Introduce parameter of layer like "key" = "value"') 
+    print(layers)
+    return layers
+
+def cfg_yielder(cfgfile):
+    next_inp = None
+    layers = parser(cfgfile)
+    if layers[0].get('type') == '[input]':
+        batch = layers[0].get('batch',None)
+        inp_dim0 = layers[0].get('dim0')
+        inp_dim1 = layers[0].get('dim1',None)
+        inp_dim2 = layers[0].get('dim2',None)
+        inp_init = [batch, inp_dim0, inp_dim1, inp_dim2]
+        next_inp = inp_init
+    for i, layer in enumerate(layers):
+        if layer['type'] == '[input]':
+            yield (inp_init, ['input', i])
+        elif layer['type'] == '[connected]':
+            outputs = layer.get('outputs')
+            activation = layer.get('activation')
+            batchnorm = layer.get('batchnorm')
+            yield (inp_init, ['connected', i, next_inp, outputs, activation,batchnorm])
+            if activation != 'linear': yield (inp_init ,[activation, i])
+            next_inp = outputs
+        elif layer['type'] == '[convolution]':
+            filters = layer.get('filters')
+            size = layer.get('size')
+            pad = layer.get('pad')
+            stride = layer.get('stride')
+            activation = layer.get('activation')
+            batchnorm = layer.get('batchnorm')
+            if pad: padding = size // 2
+            yield (inp_init,['convolution', i, next_inp, filters, size, stride, padding,activation,batchnorm])
+            if activation != 'linear': yield (inp_init, [activation, i])
+            w_ = (inp_dim0 + 2 * padding - size) // stride + 1
+            h_ = (inp_dim1 + 2 * padding - size) // stride + 1
+            inp_dim0, inp_dim1, inp_dim2 = w_, h_, filters
+            next_inp = [batch,inp_dim0,inp_dim1,inp_dim2]
+        elif layer['type'] == '[maxpool]':
+            stride = layer.get('stride', 1)
+            size = layer.get('size',stride)
+            pad = layer.get('pad',(size-1)//2)
+            yield (inp_init,['maxpool',i,size,stride,pad])
+            w_ = (inp_dim0 + 2*pad) // stride
+            h_ = (inp_dim1 + 2*pad) // stride
+            inp_dim0, inp_dim1 = w_, h_
+            next_inp = [batch,inp_dim0,inp_dim1,inp_dim2]
+        else: pass
+
