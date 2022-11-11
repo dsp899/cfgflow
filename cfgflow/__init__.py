@@ -9,7 +9,12 @@ for i, (cfginit, cfglayer) in enumerate(cfglayers):
     init = cfginit
     pylayer = cfgflow.layers.create(init,cfglayer)
     pylayers.append(pylayer)
-tfnet = cfgflow.net.TFNet(init,pylayers)
-print(tfnet.out_net.shape)
-tfnet.savepb()
+tfnet = cfgflow.net.TFNet(init,pylayers,mode=True)
+tfnet.generate_train(learnrate=0.0001)
+tfnet.train(batchsize=64,epochs=1)
+tfnet.processvar()
+tfnet.savechkpt()
+tfnet.savemeta()
 
+tfnetInfer = cfgflow.net.TFNet(init,pylayers,mode=False)
+tfnetInfer.infer()
