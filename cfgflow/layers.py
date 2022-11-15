@@ -4,6 +4,7 @@ class Layer(object):
     def __init__(self,init,cfglayer):
         self.init = init
         self.type = cfglayer[0]
+        print(self.type)
         self.num = cfglayer[1]
         self.param_shapes = None
         if (len(cfglayer) > 2):
@@ -15,7 +16,7 @@ class Layer(object):
 class batchnorm(Layer):
     def generate(self,cfglayer):
         self.inp_shape = cfglayer[2]
-        self.param_shapes = {'batchnorm': self.inp_shape[1:]}
+        self.param_shapes = {'batchnorm': self.inp_shape[-1]}
                 
 class connected(Layer):
     def generate(self,cfglayer):
@@ -49,12 +50,30 @@ class averagepool(Layer):
         self.stride = cfglayer[3]
         self.pad = cfglayer[4]
 
+class identity(Layer):
+    def generate(self,cfglayer):
+        self.inp = cfglayer[2]
+        self.out = cfglayer[3]
+        self.inp1 = None
+        self.inp2 = None
+
+class blockinit(Layer):
+    def generate(self,cfglayer):
+        self.inp = cfglayer[2]
+        self.branch = None
+
+class blockend(Layer):
+    def generate(self,cfglayer):
+        self.master = None
 
 pyops = dict({'connected': connected,
               'convolution': convolution,
               'batchnorm': batchnorm,
               'maxpool': maxpool,
-              'averagepool': averagepool})
+              'averagepool': averagepool,
+              'identity': identity,
+              'blockinit': blockinit,
+              'blockend': blockend})
 
 def create(init, cfglayer):
     layertype = cfglayer[0]

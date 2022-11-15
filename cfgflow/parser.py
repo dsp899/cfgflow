@@ -57,7 +57,7 @@ def cfg_yielder(cfgfile):
             pad = layer.get('pad')
             stride = layer.get('stride')
             batchnorm = layer.get('batchnorm')
-            activation = layer.get('activation')
+            activation = layer.get('activation','linear')
             if pad: padding = size // 2
             yield (inp_init,['convolution', i, next_inp, filters, size, stride, padding, activation])
             w_ = (inp_dim0 + 2 * padding - size) // stride + 1
@@ -84,5 +84,16 @@ def cfg_yielder(cfgfile):
             h_ = (inp_dim1 + 2*pad) // stride
             inp_dim0, inp_dim1 = w_, h_
             next_inp = [batch,inp_dim0,inp_dim1,inp_dim2]
+        elif layer['type'] == '[identity]':
+            inp = layer.get('in')
+            out = layer.get('out',None)
+            yield (inp_init, ['identity',i,inp,out])
+        elif layer['type'] == '[blockinit]':
+            inp = layer.get('in')
+            #length = layer.get('length')
+            yield (inp_init, ['blockinit',i,inp])
+        elif layer['type'] == '[blockend]':
+            out = layer.get('out',None)
+            yield (inp_init, ['blockend',i,out])
         else: pass
 

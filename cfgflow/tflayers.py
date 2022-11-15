@@ -60,7 +60,7 @@ class TFBatchnorm(TFLayer):
             self.update = self.ewma_trainer.apply([self.mean, self.variance])
             self.moving_var['mean'] = self.ewma_trainer.average(self.mean)
             self.moving_var['variance'] = self.ewma_trainer.average(self.variance)
-            mean, variance = tf.nn.moments(self.inp.out, [0])
+            mean, variance = tf.nn.moments(self.inp.out,axes=[0,1,2],keep_dims=False)
             assign_mean = self.mean.assign(mean)
             assign_variance = self.variance.assign(variance)
             with tf.control_dependencies([assign_mean, assign_variance,self.update]):
@@ -80,7 +80,7 @@ class TFMaxpool(TFLayer):
     def generate_nodes(self,train):
         return tf.nn.max_pool(self.inp.out, padding = 'SAME', ksize = [1] + [self.lay.size]*2 + [1], strides = [1] + [self.lay.stride]*2 + [1], name = self.scope)
 
-class TFMAveragepool(TFLayer):
+class TFAveragepool(TFLayer):
     def generate_nodes(self,train):
         return tf.nn.max_pool(self.inp.out, padding = 'SAME', ksize = [1] + [self.lay.size]*2 + [1], strides = [1] + [self.lay.stride]*2 + [1], name = self.scope)
 
@@ -88,13 +88,29 @@ class TFRelu(TFLayer):
     def generate_nodes(self,train):
         return tf.nn.relu(self.inp.out,name=self.scope)
 
+class TFIdentity(TFLayer):
+    def generate_nodes(self,train):
+        return tf.add(self.lay.inp1,self.lay.inp2,name=self.scope)
+
+class TFBlockinit(TFLayer):
+    def generate_nodes(self,train):
+        return tf.identity(self.lay.branch,name=self.scope)
+
+class TFBlockend(TFLayer):
+    def generate_nodes(self,train):
+        return tf.add(self.inp.out,self.lay.master,name=self.scope)
+
+
 
 tfops = dict({'connected': TFConnected,
               'convolution': TFConvolution,
               'batchnorm': TFBatchnorm,
               'maxpool': TFMaxpool,
-              'averagepool': TFAveragepool
-              'relu': TFRelu})
+              'averagepool': TFAveragepool,
+              'relu': TFRelu,
+              'identity': TFIdentity,
+              'blockinit': TFBlockinit,
+              'blockend': TFBlockend})
 
 def tfcreate(args,train):
     tftype = args[2].type

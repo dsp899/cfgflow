@@ -14,7 +14,9 @@ tfnet.generate_train(learnrate=0.0001)
 tfnet.train(batchsize=64,epochs=1)
 tfnet.processvar()
 tfnet.savechkpt()
-tfnet.savemeta()
+#tfnet.savemeta()
 
 tfnetInfer = cfgflow.net.TFNet(init,pylayers,mode=False)
+tfnetInfer.savepb()
 tfnetInfer.infer()
+

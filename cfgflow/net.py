@@ -6,6 +6,7 @@ import os
 class TFNet(object):
     def __init__(self,init,pylayers,mode):
         self.layers = pylayers
+        self.tflayers = list()
         self.vardict = dict()
         self.graph = tf.Graph()
         with self.graph.as_default() as graph:
@@ -16,13 +17,27 @@ class TFNet(object):
             print(tf.global_variables())
 
     def generate(self,mode):
-        self.batchnorm_layers = dict() 
+        self.bnlayers = dict()
+        master = None
         state = tf.identity(self.inpnet)
         for i, layer in enumerate(self.layers):
             args = [i,state,layer]
+            if layer.type == 'identity':
+                layer.inp1 = self.tflayers[layer.inp] 
+                if (layer.out != None): 
+                    layer.inp2 = self.tflayers[layer.out]
+                else:
+                    layer.inp2 = state.out
+            elif layer.type == 'blockinit':
+                layer.branch = self.tflayers[layer.inp]
+                master = state.out
+            elif layer.type == 'blockend':
+                layer.master = master
+            else: pass
             state = cfgflow.tflayers.tfcreate(args,mode)
+            self.tflayers.append(state.out)
             if state.lay.type == 'batchnorm':
-                self.batchnorm_layers[state.scope] = state 
+                self.bnlayers[state.scope] = state 
         return tf.identity(state.out, name='output')
 
     def generate_train(self,learnrate):
@@ -78,7 +93,7 @@ class TFNet(object):
             if 'batchnorm' in var.name:
                 if 'ExponentialMovingAverage' in var.name:
                     (_type,moment,shadow) = var.name.split(':')[0].split('/')
-                    lay = self.batchnorm_layers[_type]
+                    lay = self.bnlayers[_type]
                     self.vardict[momentdict[moment]] = lay.moving_var[moment]
                 else:
                     (_type,moment) = var.name.split(':')[0].split('/')
@@ -112,5 +127,5 @@ class TFNet(object):
         workspace = os.path.abspath(os.path.curdir)
         builtdir = os.path.join(workspace,'built')
         with tf.Session(graph=self.graph) as sess:
-            tf.train.write_graph(graph_or_graph_def=sess.graph_def, logdir=cfgdir, name='graph.pb', as_text=False)
+            tf.train.write_graph(graph_or_graph_def=sess.graph_def, logdir=builtdir, name='graph.pb', as_text=False)
 
