@@ -1,0 +1,8 @@
+{
+    "lib": "libvart-dpu-runner.so",
+    "filename": "compiledGraph.xmodel",
+    "kernel": [
+        "subgraph_1-convolution_2"
+    ],
+    "target": "DPUCAHX8H_ISA2_ELP2"
+}

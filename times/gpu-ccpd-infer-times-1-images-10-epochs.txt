@@ -1,0 +1,10 @@
+Epoch: 0, Infer 1 image(s) time: 39.46ms
+Epoch: 1, Infer 1 image(s) time: 1.68ms
+Epoch: 2, Infer 1 image(s) time: 1.04ms
+Epoch: 3, Infer 1 image(s) time: 1.47ms
+Epoch: 4, Infer 1 image(s) time: 1.51ms
+Epoch: 5, Infer 1 image(s) time: 1.64ms
+Epoch: 6, Infer 1 image(s) time: 1.52ms
+Epoch: 7, Infer 1 image(s) time: 1.62ms
+Epoch: 8, Infer 1 image(s) time: 1.50ms
+Epoch: 9, Infer 1 image(s) time: 1.65ms

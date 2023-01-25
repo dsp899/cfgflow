@@ -1,0 +1,2 @@
+model_checkpoint_path: "/workspace/demo/VART/dais_cfgflow/built/graph"
+all_model_checkpoint_paths: "/workspace/demo/VART/dais_cfgflow/built/graph"
